@@ -94,6 +94,7 @@ class UserSearchPage extends Component {
    let newUsers ;
    newUsers = this.users;
    if(query){
+     query = query.toLowerCase();
      newUsers = Array.prototype.filter.call(this.users,(user)=>{
        // checks if id , name , pincode , address contains specific query
        if(user.id.toLowerCase().includes(query) || user.name.toLowerCase().includes(query) || user.pincode.toLowerCase().includes(query)  || user.address.toLowerCase().includes(query)){
