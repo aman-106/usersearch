@@ -67,28 +67,35 @@ const users = [{
 }
 ];
 
-class App extends Component {
+//  this displays the search bar and shows the list of users
+class UserSearchPage extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      query: '',
-      filterUsers:users,
+      query: '', // key for search
+      filterUsers:users,  // stores the updated user data
     };
     this.users = users;
-    this.handler = this.handler.bind(this);
+    this.handleKeys = this.handleKeys.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.shouldMoveSelected = this.shouldMoveSelected.bind(this);
+
+
   }
 
+  //  sets the state and filter the users data for given value
   handleSearch (e) {
    this.setState({ query: e.target.value })
    this.filterdata(e.target.value);
  }
 
+ // for string returns the filter the users list
  filterdata(query){
    let newUsers ;
    newUsers = this.users;
    if(query){
      newUsers = Array.prototype.filter.call(this.users,(user)=>{
-       // debugger;
+       // checks if id , name , pincode , address contains specific query
        if(user.id.toLowerCase().includes(query) || user.name.toLowerCase().includes(query) || user.pincode.toLowerCase().includes(query)  || user.address.toLowerCase().includes(query)){
          return true;
        }
@@ -98,7 +105,8 @@ class App extends Component {
    this.setState({filterUsers:newUsers});
  }
 
-  handler(event){
+ // handle keys arrow up and arrow down
+  handleKeys(event){
    if(event.keyCode == 40 && event.shiftKey == false && event.metaKey == false && event.altKey == false && event.ctrlKey == false ){
      // arrowDown
      this.shouldMoveSelected(1);
@@ -106,16 +114,47 @@ class App extends Component {
    if(event.keyCode == 38  && event.shiftKey == false && event.metaKey == false && event.altKey == false && event.ctrlKey == false){
      //arrowUp
      this.shouldMoveSelected(-1);
-
    }
+ }
+
+// on press keys shift the selected user
+ shouldMoveSelected(move){
+   // current user index
+   var userIndex = this.state.filterUsers.findIndex((user)=>{
+     if(user.id == this.state.selected){
+       return true;
+     }
+   });
+   // for arrow down
+   if(userIndex!=(this.state.filterUsers.length-1) && move == 1 ){
+     userIndex = userIndex + 1;
+   }else if(userIndex==(this.state.filterUsers.length-1) && move==1){
+      userIndex=0;
+    }
+    // for arrow up
+   if( userIndex!= 0 && move == -1){
+     userIndex = userIndex - 1;
+   }else if (userIndex == 0 && move == -1) {
+     userIndex = this.state.filterUsers.length - 1 ;
+   }
+
+   const userId  = this.state.filterUsers[userIndex].id;
+
+   this.setState({
+     selected:userId,
+   });
+
+ }
+
+// on click the set the userid
+ handleClick(userid){
+   this.setState({selected:userid});
  }
 
   render() {
     return (
-        <div className="App" style={{'margin':'20px','position': 'relative'}}
-          onKeyDown={this.handler}
-          // onKeyPress={handler}
-          // onKeyUp={handler}
+        <div className="UserSearchPage" style={{'margin':'20px','position': 'relative'}}
+          onKeyDown={this.handleKeys}
           >
           <input
             style={{'height':'50px','width':'500px','padding':'10px','border':'2px solid #e9e9e9','font-size':'24px'}}
@@ -124,8 +163,12 @@ class App extends Component {
             onChange={(event)=>{this.handleSearch(event)}}
             value={this.state.query}
           />
-          <div id='informationDiv' class="app-container" style={{'position': 'absolute','left':'0px','top':'60px','padding':'2px'}}>
-            {this.state.query ? <ScrollView users={this.state.filterUsers}/> : false}
+          <div id='informationDiv' class="UserSearchPage-container" style={{'position': 'absolute','left':'0px','top':'60px','padding':'2px'}}>
+            {this.state.query ? <ScrollView
+              users={this.state.filterUsers}
+              handleClick={this.handleClick}
+              selected={this.state.selected}/>
+              : false}
           </div>
         </div>
 
@@ -138,24 +181,26 @@ class App extends Component {
 
 
 
-
+// display the list of users in div (allows scroll)
 function ScrollView(props){
   return (
     <div style={{'height':'300px','width':'400px','overflow': 'scroll','border':'5px solid #e9e9e9','padding':'10px'}}
       >
-      <ListOfUsers users={props.users}/>
+      <ListOfUsers users={props.users} handleClick={props.handleClick} selected={props.selected}/>
     </div>);
 }
 
+// render the list of users
 function ListOfUsers(props){
   if(props.users.length==0){
     return <h2>No Data Available</h2>
   }
   return props.users.map((user)=>{
-    return (<UserInformation userdata={user}/>);
+    return (<UserInformation userdata={user} handleClick={props.handleClick} selected={props.selected}/>);
   });
 }
 
+// render the user
 class UserInformation extends React.Component{
 
   constructor(props) {
@@ -166,16 +211,11 @@ class UserInformation extends React.Component{
   mouseOut() {
     this.setState({flipped: false,color:'#FFFFFF'});
   }
-
+// mouse hover div
   mouseOver() {
-    // console.log("Mouse over!!!");
     this.setState({flipped: true,color:'#FAF3DD'});
-    // if(this.props.handleMouseOver){
-    //   this.props.handleMouseOver();
-    // }
-
   }
-
+  // for a click , fires props handleClick and state selected true
   handleClick(event){
     event.stopPropagation();
     console.log(event.currentTarget.getAttribute('index'));
@@ -189,8 +229,9 @@ class UserInformation extends React.Component{
 
   render(){
     let borderStyle = '2px solid #e9e9e9';
+    // checks if div is selected
     if(this.props.selected && this.props.selected == this.props.userdata.id){
-      borderStyle = '2px solid #B8F2E6';
+      borderStyle = '4px solid #B8F2E6';
     }
     return (
       <div
@@ -220,4 +261,4 @@ class UserInformation extends React.Component{
 
 
 
-export default App;
+export default UserSearchPage;
